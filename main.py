@@ -301,8 +301,15 @@ class AC3:
         The method runs AC3 for the arcs involving the variables whose values are 
         already assigned in the initial grid. 
         """
-        # Implement here the code for making the CSP arc consistent as a pre-processing step; this method should be called once before search
-        pass
+
+        Q = []
+        
+        for row in range(grid.get_width()):
+            for col in range(grid.get_width()):
+                if len(grid.get_cells()[row][col]) == 1:
+                    Q.append((row, col))
+        
+        return self.consistency(grid, Q)
 
     def consistency(self, grid, Q):
         """
@@ -323,36 +330,34 @@ class AC3:
         The method returns True if AC3 detected that the problem can't be solved with the current
         partial assignment; the method returns False otherwise. 
         """
-        # Implement here the domain-dependent version of AC3.
     
-        # while Q:
-        #     row, col = Q.pop(0)
+        while Q:
+
+            var = Q.pop()
+            row, col = var
             
-        #     # Only process if the variable has been assigned (domain size 1)
-        #     if len(grid.get_cells()[row][col]) != 1:
-        #         continue
+            # delete from row
+            variables_assigned, failure = self.remove_domain_row(grid, row, col)
+            if failure:
+                return True
+            if variables_assigned is not None:
+                Q.extend(variables_assigned)
             
-        #     value = grid.get_cells()[row][col]
+            # delete from column
+            variables_assigned, failure = self.remove_domain_column(grid, row, col)
+            if failure:
+                return True
+            if variables_assigned is not None:
+                Q.extend(variables_assigned)
             
-        #     # Remove value from row
-        #     variables_assigned, failure = self.remove_domain_row(grid, row, col)
-        #     if failure:
-        #         return True
-        #     Q.extend(variables_assigned)
-            
-        #     # Remove value from column
-        #     variables_assigned, failure = self.remove_domain_column(grid, row, col)
-        #     if failure:
-        #         return True
-        #     Q.extend(variables_assigned)
-            
-        #     # Remove value from unit
-        #     variables_assigned, failure = self.remove_domain_unit(grid, row, col)
-        #     if failure:
-        #         return True
-        #     Q.extend(variables_assigned)
+            # delete from unit
+            variables_assigned, failure = self.remove_domain_unit(grid, row, col)
+            if failure:
+                return True
+            if variables_assigned is not None:
+                Q.extend(variables_assigned)
         
-        # return False
+        return False
 
 class Backtracking:
     """
@@ -364,74 +369,36 @@ class Backtracking:
         Implements backtracking search with inference. 
         """
         
-        # if A is complete: return A
         if grid.is_solved():
             return grid
-        
-        # var = select_unassigned_variable(A)
+
         var = var_selector.select_variable(grid)
-        
+
         if var is None:
             return None
         
-        # for d in domain(var):
         row, col = var
-
+        
         domain = grid.get_cells()[row][col]
-        
-        for value in domain:
-            # if d is consistent with A:
-            copy_grid = grid.copy()
-            copy_grid.get_cells()[row][col] = value
-            
-            ac3 = AC3()
-            Q = [(row, col)] 
-            
-            if not ac3.consistency(copy_grid, Q):
-                # result = Backtracking(copy_A)
-                result = self.search(copy_grid, var_selector)
-                # if result is not failure:
-                if result is not None:
-                    return result
-        
-        # return failure
-        return None
-    
-    # def search(self, grid, var_selector):
-    #     """
-    #     Implements backtracking search with inference. 
-    #     """
-        
-    #     # if A is complete: return A
-    #     if grid.is_solved():
-    #         return grid
-        
-    #     # var = select_unassigned_variable(A)
-    #     var = var_selector.select_variable(grid)
-        
-    #     # for d in domain(var):
-    #     row, col = var
-    #     domain = grid.get_cells()[row][col]
-        
-    #     for value in domain:
-    #         # if d is consistent with A:
-    #         copy_grid = grid.copy()
-    #         copy_grid.get_cells()[row][col] = value
-            
-    #         # Check consistency with AC3
-    #         ac3 = AC3()
-    #         Q = [(row, col)]
-            
-    #         if not ac3.consistency(copy_grid, Q):
-    #             # result = Backtracking(copy_A)
-    #             result = self.search(copy_grid, var_selector)
-    #             # if result is not failure:
-    #             if result is not None:
-    #                 return result
-        
-    #     # return failure
-    #     return None
 
+        for value in domain:
+            
+            if grid.is_value_consistent(value, row, col):
+
+                copy_grid = grid.copy()
+                copy_grid.get_cells()[row][col] = value
+                
+                ac3 = AC3()
+                Q = [(row, col)]
+                failure = ac3.consistency(copy_grid, Q)
+                
+                if not failure:
+                    result = self.search(copy_grid, var_selector)
+                
+                    if result is not None:
+                        return result
+
+        return None
 
 
 file = open('tutorial_problem.txt', 'r')
@@ -442,8 +409,16 @@ for p in problems:
     # Read problem from string
     g = Grid()
     g.read_file(p)
-
-    # Test backtracking search with FirstAvailable heuristic
+    
+    ac3 = AC3()
+    failure = ac3.pre_process_consistency(g)
+    
+    if failure:
+        print('No solution found')
+        print()
+        continue
+    
+    # testing Backtracking.search with FirstAvailable variable selector
     bt = Backtracking()
     var_selector = FirstAvailable()
     
