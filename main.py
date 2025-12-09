@@ -309,7 +309,6 @@ class AC3:
                 if len(grid.get_cells()[row][col]) == 1:
                     Q.append((row, col))
         
-        # Run AC3 on the initial assignments
         return self.consistency(grid, Q)
 
     def consistency(self, grid, Q):
@@ -389,7 +388,6 @@ class Backtracking:
                 copy_grid = grid.copy()
                 copy_grid.get_cells()[row][col] = value
                 
-                # Run AC3 consistency check after assignment
                 ac3 = AC3()
                 Q = [(row, col)]
                 failure = ac3.consistency(copy_grid, Q)
@@ -419,8 +417,8 @@ for p in problems:
         print('No solution found')
         print()
         continue
-
-    # Test backtracking search with FirstAvailable heuristic
+    
+    # testing Backtracking.search with FirstAvailable variable selector
     bt = Backtracking()
     var_selector = FirstAvailable()
     
