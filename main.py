@@ -324,35 +324,35 @@ class AC3:
         partial assignment; the method returns False otherwise. 
         """
         # Implement here the domain-dependent version of AC3.
-        pass
-        # while Q:
-        #     row, col = Q.pop(0)
+    
+        while Q:
+            row, col = Q.pop(0)
             
-        #     # Only process if the variable has been assigned (domain size 1)
-        #     if len(grid.get_cells()[row][col]) != 1:
-        #         continue
+            # Only process if the variable has been assigned (domain size 1)
+            if len(grid.get_cells()[row][col]) != 1:
+                continue
             
-        #     value = grid.get_cells()[row][col]
+            value = grid.get_cells()[row][col]
             
-        #     # Remove value from row
-        #     variables_assigned, failure = self.remove_domain_row(grid, row, col)
-        #     if failure:
-        #         return True
-        #     Q.extend(variables_assigned)
+            # Remove value from row
+            variables_assigned, failure = self.remove_domain_row(grid, row, col)
+            if failure:
+                return True
+            Q.extend(variables_assigned)
             
-        #     # Remove value from column
-        #     variables_assigned, failure = self.remove_domain_column(grid, row, col)
-        #     if failure:
-        #         return True
-        #     Q.extend(variables_assigned)
+            # Remove value from column
+            variables_assigned, failure = self.remove_domain_column(grid, row, col)
+            if failure:
+                return True
+            Q.extend(variables_assigned)
             
-        #     # Remove value from unit
-        #     variables_assigned, failure = self.remove_domain_unit(grid, row, col)
-        #     if failure:
-        #         return True
-        #     Q.extend(variables_assigned)
+            # Remove value from unit
+            variables_assigned, failure = self.remove_domain_unit(grid, row, col)
+            if failure:
+                return True
+            Q.extend(variables_assigned)
         
-        # return False
+        return False
 
 class Backtracking:
     """
