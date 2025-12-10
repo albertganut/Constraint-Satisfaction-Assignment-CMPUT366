@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 class PlotResults:
     """
@@ -400,116 +401,69 @@ class Backtracking:
 
         return None
 
-
-file = open('tutorial_problem.txt', 'r')
-# file = open('top95.txt', 'r')
+# file = open('tutorial_problem.txt', 'r')
+file = open('top95.txt', 'r')
 problems = file.readlines()
 
+running_time_mrv = []
+running_time_first_available = []
+total_sudokus = len(problems)
+count = 0  
+
+print(f"Starting experiment on {total_sudokus} problems...")
+
 for p in problems:
-    # Read problem from string
-    g = Grid()
-    g.read_file(p)
+
+    p = p.strip() 
+
+    # backtracking with the MRV heuristic
+    MRV_grid = Grid()
+    MRV_grid.read_file(p)
+
+    ac3 = AC3()
+    ac3.pre_process_consistency(MRV_grid)
+    
+    backtrack_MRV = Backtracking()
+    mrv = MRV()
+    
+    start_time = time.time()
+    backtrack_MRV.search(MRV_grid, mrv)
+    end_time = time.time()
+    
+    running_time_mrv.append(end_time - start_time)
+
+    # backtracking with the First Available heuristic
+    first_available_grid = Grid()
+    first_available_grid.read_filÍe(p)
     
     ac3 = AC3()
-    failure = ac3.pre_process_consistency(g)
+    ac3.pre_process_consistency(first_available_grid)
     
-    if failure:
-        print('No solution found')
-        print()
-        continue
+    backtrack_first_available = Backtracking()
+    first_available = FirstAvailable()
     
-    # testing Backtracking.search with FirstAvailable variable selector
-    bt = Backtracking()
-    var_selector = FirstAvailable()
+    start_time = time.time()
+    backtrack_first_available.search(first_available_grid, first_available)
+    end_time = time.time()
     
-    solution = bt.search(g, var_selector)
-    
-    if solution is not None:
-        print('Solution found!')
-        solution.print()
-    else:
-        print('No solution found')
-    
-    print()
+    running_time_first_available.append(end_time - start_time)
 
-    # ##### Beginning of tutorial code #####
-    # # Print the grid on the screen
-    # print('Puzzle')
-    # g.print()
+    # for my testing purposes
+    # shows the progress so that it's not just a blank terminal
+    count += 1
+    print(f"Solved: {count}/{total_sudokus} | MRV: {running_time_mrv[-1]:.5f}s | FA: {running_time_first_available[-1]:.5f}s")
 
-    # # # Print the domains of all variables
-    # print('Domains of Variables')
-    # g.print_domains()
-    # print()
+# plot
+print("Generating plot...")
+plotter = PlotResults()
+plotter.plot_results(
+    running_time_mrv, 
+    running_time_first_available,
+    "Running Time Backtracking (MRV)",
+    "Running Time Backtracking (FA)", 
+    "running_time"
+)
 
-    # # Iterate over domain values
-    # for i in range(g.get_width()):
-    #     for j in range(g.get_width()):
-
-    #         print('Domain of ', i, j, ': ', g.get_cells()[i][j])
-
-    #         for d in g.get_cells()[i][j]:
-    #             print(d, end=' ')
-    #         print()
-
-    # # # Make a copy of a grid
-    # copy_g = g.copy()
-
-    # print('Copy (copy_g): ')
-    # copy_g.print()
-    # print()
-
-    # print('Original (g): ')
-    # g.print()
-    # print()
-
-    # # # Removing 2 from the domain of the variable in the first row and second column
-    # copy_g.get_cells()[0][1] = copy_g.get_cells()[0][1].replace('2', '')
-
-    # # # The domain (0, 1) of copy_g shouldn't have 2 (first list, second element)
-    # print('copy_g')
-    # copy_g.print_domains()
-    # print()
-
-    # # # The domain of variable g shouldn't have changed though
-    # print('g')
-    # g.print_domains()
-    # print()
-
-    # # Instance of AC3 Object
-    # ac3 = AC3()
-
-    # # Making all variables in the first row arc consistent with (0, 0), whose value is 4
-    # variables_assigned, failure = ac3.remove_domain_row(g, 0, 0)
-
-    # # The domain of all variables in the first row must not have 4
-    # print('Removed all 4s from the first row')
-    # g.print_domains()
-
-    # # # variables_assigned contains all variables whose domain reduced to size 1 in the remove_domain_row opeation
-    # print('Variables that were assigned by remove_domain_row: ', variables_assigned)
-
-    # # # failture returns True if any of the variables in the row were reduced to size 0
-    # print('Failure: ', failure)
-    # print()
-
-    # # # Making all variables in the first column arc consistent with (0, 0), whose value is 4
-    # variables_assigned, failure = ac3.remove_domain_column(g, 0, 0)
-
-    # # # The domain of all variables in the first column must not have 4
-    # print('Removed all 4s from the first column')
-    # g.print_domains()
-    # print()
-
-    # # # Making all variables in the first unit arc consistent with (0, 0), whose value is 4
-    # variables_assigned, failure = ac3.remove_domain_unit(g, 0, 0)
-
-    # # # The domain of all variables in the first column must not have 4
-    # print('Removed all 4s from the first unit')
-    # g.print_domains()
-    # print()
-
-    # print('Is the current grid a solution? ', g.is_solved())
-    # ##### End of tutorial code #####
-
+# for my testing purposes
+print("Done! Plot saved as 'running_time.png'.")
 
